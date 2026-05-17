@@ -27,3 +27,5 @@ The service maintains highly optimized running metrics across the global user gr
 * **Pure In-Memory Engineering:** To maximize throughput and guarantee predictable sub-millisecond responses, the pipeline bypasses external persistent storage or caching engines. It is constructed entirely out of standard data structures tailored for safe concurrency and minimal garbage collection overhead.
 * **Streaming vs. Batch Paradigm:** The system processes records individualistically as they stream via HTTP, updating the internal graph state atomically rather than relying on batch reconciliation windows.
 * **Zero External Storage Libraries:** Built purely from native collection types to show mastery over custom data structure orchestration and algorithmic efficiency.
+
+## TODO How to execute
