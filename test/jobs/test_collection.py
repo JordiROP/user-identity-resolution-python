@@ -1,0 +1,88 @@
+from app.models.input.interaction import CollectInteraction
+from app.models.internal.interaction import Interaction
+from app.models.internal.user import User
+from app.models.commons.values import Event, Source
+from app.db import db
+
+from app.jobs.collection import collect
+
+def test_process_collect() -> None:
+    inputs = [
+        {"id":"ded25add-bf08-4eda-a32f-a0e7424a9369","userIds":["u1"],"source":"appscreen","event":"display"},
+        {"id":"cbe83fdc-4b5c-4728-9db4-bcb269f5a2e0","userIds":["u2","u22","u31","u32"],"source":"webpage","event":"display"},
+        {"id":"7c51900e-bb98-422c-a830-35ff0e00b8e4","userIds":["u32","u33"],"source":"appscreen","event":"buy"},
+        {"id":"1ae20cbb-e1bd-4843-b787-f71707c7dd6e","userIds":["u4"],"source":"webpage","event":"buy"},
+        {"id":"cbe83fdc-4b5c-4728-9db4-bcb269f5a2e1","userIds":["u5"], "source":"appscreen","event":"display"},
+        {"id":"0067fd88-511e-48bf-a944-cc743bd01f03","userIds":["u5","u51","u52"],"source":"appscreen","event":"buy"},
+        {"id":"565594d0-2c2e-40ed-9b1d-3f0e1a7f2eeb","userIds":["u6","u61","u62"],"source":"webpage","event":"display"},
+        {"id":"7fbcedc3-d47d-4aaa-9616-4b847519690c","userIds":["u7","u71","u72"],"source":"appscreen","event":"display"}]
+    
+    u1 = User(None, "u1", set());u1.intr_grp.update({u1})
+    
+    u2 = User(None, "u2", set())
+    u22 = User(u2, "u22", set())
+    u31 = User(u2, "u31", set())
+    u32 = User(u2, "u32", set())
+    u2.intr_grp.update({u2, u22, u31, u32})
+    u22.intr_grp.update({u2, u22, u31, u32})
+    u31.intr_grp.update({u2, u22, u31, u32})
+    u33 = User(u2, "u33", set())
+    u32.intr_grp.update({u2, u22, u31, u32, u33})
+    u33.intr_grp.update({u32, u33})
+    u4 = User(None, "u4", set());u4.intr_grp.update({u4})
+    u5 = User(None, "u5", set())
+    u51 = User(u5, "u51", set())
+    u52 = User(u5, "u52", set())
+    u5.intr_grp.update({u5, u51, u52})
+    u51.intr_grp.update({u5, u51, u52})
+    u52.intr_grp.update({u5, u51, u52})
+    u6 = User(None, "u6", set())
+    u61 = User(u6, "u61", set())
+    u62 = User(u6, "u62", set())
+    u6.intr_grp.update({u6, u61, u62})
+    u61.intr_grp.update({u6, u61, u62})
+    u62.intr_grp.update({u6, u61, u62})
+    u7 = User(None, "u7", set())
+    u71 = User(u7, "u71", set())
+    u72 = User(u7, "u72", set())
+    u7.intr_grp.update({u7, u71, u72})
+    u71.intr_grp.update({u7, u71, u72})
+    u72.intr_grp.update({u7, u71, u72})
+
+    expected_users = {
+        "u1": u1,
+        "u2": u2,
+        "u22": u22,
+        "u31": u31,
+        "u32": u32,
+        "u33": u33,
+        "u4": u4,
+        "u5": u5,
+        "u51": u51,
+        "u52": u52,
+        "u6": u6,
+        "u61": u61,
+        "u62": u62,
+        "u7": u7,
+        "u71": u71,
+        "u72": u72,
+    }
+    expected_interactions = {
+        "ded25add-bf08-4eda-a32f-a0e7424a9369": Interaction(["u1"], Source("appscreen"), Event("display")),
+        "cbe83fdc-4b5c-4728-9db4-bcb269f5a2e0": Interaction(["u2","u22","u31","u32"], Source("webpage"), Event("display")),
+        "7c51900e-bb98-422c-a830-35ff0e00b8e4": Interaction(["u32","u33"], Source("appscreen"), Event("buy")),
+        "1ae20cbb-e1bd-4843-b787-f71707c7dd6e": Interaction(["u4"],Source("webpage"), Event("buy")),
+        "cbe83fdc-4b5c-4728-9db4-bcb269f5a2e1": Interaction(["u5"], Source("appscreen"), Event("display")),
+        "0067fd88-511e-48bf-a944-cc743bd01f03": Interaction(["u5","u51","u52"], Source("appscreen"), Event("buy")),
+        "565594d0-2c2e-40ed-9b1d-3f0e1a7f2eeb": Interaction(["u6","u61","u62"], Source("webpage"), Event("display")),
+        "7fbcedc3-d47d-4aaa-9616-4b847519690c": Interaction(["u7","u71","u72"], Source("appscreen"), Event("display"))
+    }
+    
+    for input in inputs:
+        collect(CollectInteraction(**input))
+        print(db.users)
+
+    assert db.interactions == expected_interactions
+    assert db.users == expected_users
+
+test_process_collect()

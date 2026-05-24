@@ -4,12 +4,11 @@ import sys
 from app.models.commons.values import Event, Source
 
 class CollectInteraction(BaseModel):
-    __slots__ = ['id_', 'source', 'event', 'users_ids']
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
     
     id_: str = Field(alias="id")
     source: Source
-    envent: Event
+    event: Event
     user_ids: list[str] = Field(alias="userIds")
 
     @field_validator("id_")
@@ -23,7 +22,6 @@ class CollectInteraction(BaseModel):
         return [sys.intern(uid) for uid in v if isinstance(uid, str)]
 
 class UpdateInteraction(BaseModel):
-    __slots__ = ['id_', 'users_ids']
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
 
     id_: str = Field(alias="id")
