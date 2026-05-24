@@ -20,7 +20,7 @@ class DB:
         self.users[user_id] = user
         return user
     
-    def get_user(self, user_id: str):
+    def get_user(self, user_id: str) -> User:
         return self.users[user_id]
 
     def get_parent(self, user_id) -> User:
@@ -37,10 +37,24 @@ class DB:
     def add_interaction(self, iuid: str, uids: list[str], source:str, event:str) -> None:
         self.interactions[iuid] = Interaction(uids, Source(source) , Event(event))
 
-    def add_user_interaction(self, user_id: str, interaction_id: str):
+    def add_user_interaction(self, user_id: str, interaction_id: str) -> None:
         if user_id in db.user_interaction:
             db.user_interaction[user_id].append(interaction_id)
         else:
             db.user_interaction[user_id] = [interaction_id]
+
+    def has_metrics(self, uid: str) -> bool:
+        return uid in self.metrics
+    
+    def get_metric(self, uid: str) -> Metric:
+        return self.metrics[uid]
+    
+    def create_metric(self, uid: str, source: Source, event: Event) -> Metric:
+        metric = Metric(source, event)
+        self.metrics[uid] = metric
+        return metric
+    
+    def delete_metric(self, uid: str) -> None:
+        del self.metrics[uid]
 
 db = DB()

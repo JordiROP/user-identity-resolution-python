@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from app.models.input.interaction import UpdateInteraction, CollectInteraction
+from app.jobs.collection import process_collect as
 
 app = FastAPI(title="Contentsquare interview Python")
 
@@ -17,6 +18,7 @@ def ping():
 
 @app.post("/collect")
 def collect(interaction: CollectInteraction):
+    process_collect(interaction)
     return JSONResponse(
         content={"status": "OK"},
         status_code= 200,
