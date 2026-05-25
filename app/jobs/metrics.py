@@ -8,4 +8,11 @@ def process_metrics():
 
     for _, metric in db.metrics.items():
         unique_users += 1
-        bounced_users += 1 if len(metric.event) == 0 else 0
+        bounced_users += 1 if metric.is_bounced() else 0
+        x_device_users +=1 if metric.is_crossed() else 0
+    
+    return {
+            "uniqueUsers": unique_users,
+            "bouncedUsers" : bounced_users,
+            "crossDeviceUsers" : x_device_users
+        }

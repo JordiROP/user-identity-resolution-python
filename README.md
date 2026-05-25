@@ -28,4 +28,10 @@ The service maintains highly optimized running metrics across the global user gr
 * **Streaming vs. Batch Paradigm:** The system processes records individualistically as they stream via HTTP, updating the internal graph state atomically rather than relying on batch reconciliation windows.
 * **Zero External Storage Libraries:** Built purely from native collection types to show mastery over custom data structure orchestration and algorithmic efficiency.
 
-## TODO How to execute
+## Execution
+
+To run the application:
+
+    ```
+    uv run fastapi dev --port 8080
+    ```

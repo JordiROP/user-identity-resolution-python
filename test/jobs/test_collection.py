@@ -4,7 +4,7 @@ from app.models.internal.user import User
 from app.models.commons.values import Event, Source
 from app.db import db
 
-from app.jobs.collection import collect
+from app.jobs.collection import process_collect
 
 def test_process_collect() -> None:
     inputs = [
@@ -79,10 +79,8 @@ def test_process_collect() -> None:
     }
     
     for input in inputs:
-        collect(CollectInteraction(**input))
+        process_collect(CollectInteraction(**input))
         print(db.users)
 
     assert db.interactions == expected_interactions
     assert db.users == expected_users
-
-test_process_collect()

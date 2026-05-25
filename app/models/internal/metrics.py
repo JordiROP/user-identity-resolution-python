@@ -1,17 +1,19 @@
 from app.models.commons.values import Event, Source
 
 class Metric:
-    __slots__ = ['source', 'event']
+    __slots__ = ['source', 'display', 'buy']
 
     def __init__(self, source: Source, event: Event):
         self.source: set[Source] = {source}
-        self.event: set[Event] = {event}
+        self.display: int = 1 if Event(event) == Event.DISPLAY else 0
+        self.buy: int = 1 if Event(event) == Event.BUY else 0
     
     def add_source(self, source: Source) -> None:
         self.source.update({source})
     
     def add_event(self, event: Event) -> None:
-        self.event.update({event})
+        self.display += 1 if Event(event) == Event.DISPLAY else 0
+        self.buy += 1 if Event(event) == Event.BUY else 0
 
     def update_metric(self, source: Source, event: Event) -> None:
         self.add_source(source)
@@ -19,7 +21,11 @@ class Metric:
     
     def merge_metrics(self, other: "Metric") -> None:
         self.source.update(other.source)
-        self.event.update(other.event)
+        self.display += other.display
+        self.buy += other.display
 
     def is_bounced(self) -> bool:
-        pass
+        return self.display == 1 and self.buy == 0
+    
+    def is_crossed(self) -> bool:
+        return len(self.source) == 2
