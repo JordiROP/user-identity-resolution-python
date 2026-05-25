@@ -4,11 +4,14 @@ from app.models.internal.metrics import Metric
 from app.models.commons.values import Source, Event
 
 class DB:
+    __slots__ = ["interactions", "users", "user_interaction", "metrics", "to_update"]
+
     def __init__(self):
         self.interactions: dict[str, Interaction] = {}
         self.users: dict[str, User] = {}
         self.user_interaction: dict[str, list[str]] = {}
         self.metrics: dict[str, Metric] = {}
+        self.to_update: set[str] = set()
 
     def user_exist(self, user_id) -> bool:
         return user_id in self.users

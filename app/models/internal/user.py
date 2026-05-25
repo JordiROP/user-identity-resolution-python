@@ -26,6 +26,19 @@ class User:
 
         return self_ids == other_ids
     
+    def traverse(self) -> set[str]:
+        uids: set[str] = {self.uid}
+        visited: set["User"] = {self}
+        to_visit: set["User"] = self.intr_grp
+
+        while to_visit:
+            current = to_visit.pop()
+            visited.add(current)
+            uids.add(current.uid)
+            will_visit = current.intr_grp.difference(visited, to_visit)
+            to_visit.update(will_visit)
+        return uids
+    
     def __hash__(self) -> int:
         return hash(self.uid)
     
