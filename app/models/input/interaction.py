@@ -25,7 +25,7 @@ class UpdateInteraction(BaseModel):
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
 
     id_: str = Field(alias="id")
-    user_ids: list[str] = Field(alias="userIds")
+    user_ids: set[str] = Field(alias="userIds")
 
     @field_validator("id_")
     @classmethod
@@ -34,5 +34,5 @@ class UpdateInteraction(BaseModel):
 
     @field_validator("user_ids")
     @classmethod
-    def intern_user_ids(cls, v: list[str]) -> list[str]:
-        return [sys.intern(uid) for uid in v if isinstance(uid, str)]
+    def intern_user_ids(cls, v: set[str]) -> set[str]:
+        return {sys.intern(uid) for uid in v if isinstance(uid, str)}
