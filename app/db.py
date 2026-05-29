@@ -37,6 +37,12 @@ class DB:
         self.users[current].parent = parent
         return parent
 
+    def update_usr_intr_grp(self, uid:str, usr_grp: set[User], truncate: bool = False):
+        if truncate:
+            self.users[uid].intr_grp = usr_grp
+        else:
+            self.users[uid].intr_grp.update(usr_grp)
+
     def get_interaction(self, iuid: str) -> Interaction:
         return self.interactions[iuid]
 
@@ -68,6 +74,9 @@ class DB:
     
     def add_recompute(self, users: set[str]) -> None:
         self.recompute.update(users)
+
+    def in_recompute(self, user_id: str) -> bool:
+        return user_id in self.recompute 
 
 
 db = DB()

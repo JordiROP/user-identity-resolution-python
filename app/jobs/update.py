@@ -19,17 +19,19 @@ def get_existing_new_users(up_users: set[str], current_intr_users: set[str]) -> 
     
     return new_users, outsiders, insiders
 
-def process_only_new_users(interaction_id: str, current_intr: Interaction, 
-                           new_users: set[str], ref_parent: User, up_users: set[str]) -> None:
-    users: set[User] = set()
-
+def process_new_users(interaction_id: str, current_intr: Interaction, 
+                           new_users: set[str], ref_parent: User, 
+                           up_users: set[str]) -> None:
+    intr_users: set[User] = {db.get_user(uid) for uid in up_users if uid in db.users}
+    
     current_intr.user_ids.update(new_users)
     for user in new_users:
         db.add_user_interaction(user, interaction_id)
-        users.add(User(ref_parent, user, set()))
+        db.add_user(user, ref_parent, intr_users)
     
-    for user in users:
-        user.intr_grp = users
+    created_users: set[User] = {db.get_user(uid) for uid in new_users}
+    for user in created_users.union(intr_users):
+        db.update_usr_intr_grp(user.uid, created_users)
     
     db.update_users_interaction(interaction_id, up_users)
 
@@ -41,8 +43,11 @@ def process_update(interaction: UpdateInteraction) -> None:
     new_users, outsiders, insiders = get_existing_new_users(up_users, current_intr.user_ids)
     ref_parent = db.get_parent(next(iter(insiders)))
 
-    if not removed_users and not outsiders and new_users:
-        process_only_new_users(interaction.id_, current_intr, new_users, ref_parent, up_users)
-    else:
-        # TODO: NEED TO RECOMPUTE SCENARIO
-
+    if new_users:
+        process_new_users(interaction.id_, current_intr, new_users, ref_parent, up_users)
+    
+    if removed_users or outsiders:
+        db.add_recompute(ref_parent.traverse())
+        for user_id in insiders.union(outsiders):
+            if db.in_recompute(user_id):
+                db.add_recompute(db.get_user(user_id).traverse())

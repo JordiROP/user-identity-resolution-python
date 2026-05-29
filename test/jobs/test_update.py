@@ -1,12 +1,13 @@
-from app.models.input.interaction import CollectInteraction
+from app.models.input.interaction import CollectInteraction, UpdateInteraction
 from app.models.internal.interaction import Interaction
 from app.models.internal.user import User
 from app.models.commons.values import Event, Source
 from app.db import db
 
 from app.jobs.collection import process_collect
+from app.jobs.update import process_update
 
-def test_process_collect() -> None:
+def test_update_new_users_only():
     inputs = [
         {"id":"ded25add-bf08-4eda-a32f-a0e7424a9369","userIds":["u1"],"source":"appscreen","event":"display"},
         {"id":"cbe83fdc-4b5c-4728-9db4-bcb269f5a2e0","userIds":["u2","u22","u31","u32"],"source":"webpage","event":"display"},
@@ -49,6 +50,21 @@ def test_process_collect() -> None:
     u71.intr_grp.update({u7, u71, u72})
     u72.intr_grp.update({u7, u71, u72})
 
+    updates = [
+        {"id":"7c51900e-bb98-422c-a830-35ff0e00b8e4","userIds":["u32","u33","u34"]},
+        {"id":"7fbcedc3-d47d-4aaa-9616-4b847519690c","userIds":["u7","u71","u72","u73"]},
+    ]
+    u34 = User(u2, "u34", {u32, u33})
+    u32.intr_grp.update({u34})
+    u33.intr_grp.update({u34})
+    u34.intr_grp.update({u34})
+    u73 = User(u7, "u73", {u7, u71, u72})
+    u7.intr_grp.update({u73})
+    u71.intr_grp.update({u73})
+    u72.intr_grp.update({u73})
+    u73.intr_grp.update({u73})
+
+
     expected_users = {
         "u1": u1,
         "u2": u2,
@@ -56,6 +72,7 @@ def test_process_collect() -> None:
         "u31": u31,
         "u32": u32,
         "u33": u33,
+        "u34": u34,
         "u4": u4,
         "u5": u5,
         "u51": u51,
@@ -66,21 +83,25 @@ def test_process_collect() -> None:
         "u7": u7,
         "u71": u71,
         "u72": u72,
+        "u73": u73,
     }
+
     expected_interactions = {
         "ded25add-bf08-4eda-a32f-a0e7424a9369": Interaction({"u1"}, Source("appscreen"), Event("display")),
         "cbe83fdc-4b5c-4728-9db4-bcb269f5a2e0": Interaction({"u2","u22","u31","u32"}, Source("webpage"), Event("display")),
-        "7c51900e-bb98-422c-a830-35ff0e00b8e4": Interaction({"u32","u33"}, Source("appscreen"), Event("buy")),
+        "7c51900e-bb98-422c-a830-35ff0e00b8e4": Interaction({"u32","u33","u34"}, Source("appscreen"), Event("buy")),
         "1ae20cbb-e1bd-4843-b787-f71707c7dd6e": Interaction({"u4"},Source("webpage"), Event("buy")),
         "cbe83fdc-4b5c-4728-9db4-bcb269f5a2e1": Interaction({"u5"}, Source("appscreen"), Event("display")),
         "0067fd88-511e-48bf-a944-cc743bd01f03": Interaction({"u5","u51","u52"}, Source("appscreen"), Event("buy")),
         "565594d0-2c2e-40ed-9b1d-3f0e1a7f2eeb": Interaction({"u6","u61","u62"}, Source("webpage"), Event("display")),
-        "7fbcedc3-d47d-4aaa-9616-4b847519690c": Interaction({"u7","u71","u72"}, Source("appscreen"), Event("display"))
+        "7fbcedc3-d47d-4aaa-9616-4b847519690c": Interaction({"u7","u71","u72","u73"}, Source("appscreen"), Event("display"))
     }
+
+    for inter in inputs:
+        process_collect(CollectInteraction(**inter))
     
-    for input in inputs:
-        process_collect(CollectInteraction(**input))
-        print(db.users)
+    for inter in updates:
+        process_update(UpdateInteraction(**inter))
 
     assert db.interactions == expected_interactions
     assert db.users == expected_users

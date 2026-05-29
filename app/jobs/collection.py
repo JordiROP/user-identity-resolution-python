@@ -12,7 +12,7 @@ def resolve_user(reference: str) -> tuple[User, User]:
 
 def process_collect(interaction: CollectInteraction) -> None:
     db.add_interaction(interaction.id_, 
-                       interaction.user_ids,
+                       set(interaction.user_ids),
                        interaction.source,
                        interaction.event)
 
