@@ -29,7 +29,7 @@ class User:
     def traverse(self) -> set[str]:
         uids: set[str] = {self.uid}
         visited: set["User"] = {self}
-        to_visit: set["User"] = self.intr_grp
+        to_visit: set["User"] = {user for user in self.intr_grp}
 
         while to_visit:
             current = to_visit.pop()
