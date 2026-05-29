@@ -75,7 +75,7 @@ class DB:
     def add_recompute(self, users: set[str]) -> None:
         self.recompute.update(users)
 
-    def in_recompute(self, user_id: str) -> bool:
+    def is_in_recompute(self, user_id: str) -> bool:
         return user_id in self.recompute 
 
 
