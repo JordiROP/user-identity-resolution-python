@@ -9,7 +9,7 @@ class DB:
     def __init__(self):
         self.interactions: dict[str, Interaction] = {}
         self.users: dict[str, User] = {}
-        self.user_interaction: dict[str, list[str]] = {}
+        self.user_interaction: dict[str, set[str]] = {}
         self.metrics: dict[str, Metric] = {}
         self.recompute: set[str] = set()
 
@@ -51,9 +51,12 @@ class DB:
 
     def add_user_interaction(self, user_id: str, interaction_id: str) -> None:
         if user_id in db.user_interaction:
-            db.user_interaction[user_id].append(interaction_id)
+            db.user_interaction[user_id].add(interaction_id)
         else:
-            db.user_interaction[user_id] = [interaction_id]
+            db.user_interaction[user_id] = {interaction_id}
+
+    def get_interaction_from_user(self, uid: str) -> set[str]:
+        return set(self.user_interaction[uid])
 
     def update_users_interaction(self, interaction_id: str, users: set[str]) -> None:
         db.interactions[interaction_id].user_ids = users
@@ -78,5 +81,14 @@ class DB:
     def is_in_recompute(self, user_id: str) -> bool:
         return user_id in self.recompute 
 
+    def clear_reacomputed_data(self) -> None:
+        for uid in self.recompute:
+            del self.users[uid]
+            del self.user_interaction[uid]
+            if uid in self.metrics:
+                del self.metrics[uid]
+    
+    def restart_recompute(self) -> None:
+        self.recompute = set()
 
 db = DB()

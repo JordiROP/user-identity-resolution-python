@@ -35,7 +35,7 @@ def process_new_users(interaction_id: str, current_intr: Interaction,
     
     db.update_users_interaction(interaction_id, up_users)
 
-def process_merge_users(current_intr: Interaction, up_users: set[str], 
+def process_merge_users(interaction_id: str, current_intr: Interaction, up_users: set[str], 
                         outsiders: set[str], insiders: set[str]) -> None:
     current_intr.user_ids = up_users
     existing_users = insiders.union(outsiders)
@@ -44,13 +44,15 @@ def process_merge_users(current_intr: Interaction, up_users: set[str],
         user.intr_grp.update(merged_users)
         if not db.is_in_recompute(user.uid):
             db.add_recompute(user.traverse())
+        if user in outsiders:
+            db.add_user_interaction(user.uid, interaction_id)
+
 
 def process_update(interaction: UpdateInteraction) -> None:
     current_intr: Interaction = db.get_interaction(interaction.id_)
     up_users: set[str] = interaction.user_ids
 
     removed_users: set[User] = {db.get_user(uid) for uid in current_intr.user_ids if uid not in up_users}
-    removed_users_str: set[str] = {uid.uid for uid in removed_users}
     new_users, outsiders, insiders = get_existing_new_users(up_users, current_intr.user_ids)
     ref_parent = db.get_parent(next(iter(insiders)))
 
@@ -58,7 +60,7 @@ def process_update(interaction: UpdateInteraction) -> None:
         process_new_users(interaction.id_, current_intr, new_users, ref_parent, up_users)
     
     if outsiders:
-        process_merge_users(current_intr, up_users, outsiders, insiders)
+        process_merge_users(interaction.id_, current_intr, up_users, outsiders, insiders)
     
     if removed_users:
         current_intr.user_ids = up_users
