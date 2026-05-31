@@ -22,7 +22,7 @@ class Metric:
     def merge_metrics(self, other: "Metric") -> None:
         self.source.update(other.source)
         self.display += other.display
-        self.buy += other.display
+        self.buy += other.buy
 
     def is_bounced(self) -> bool:
         return self.display == 1 and self.buy == 0

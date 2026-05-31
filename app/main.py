@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from app.models.input.interaction import UpdateInteraction, CollectInteraction
 from app.jobs.collection import process_collect
 from app.jobs.metrics import process_metrics
+from app.jobs.update import process_update
+
 
 app = FastAPI(title="Contentsquare interview Python")
 
@@ -29,6 +31,7 @@ def collect(interaction: CollectInteraction):
 
 @app.post("/update")
 def update(interaction: UpdateInteraction):
+    process_update(interaction)
     return JSONResponse(
         content={"status": "OK"},
         status_code= 200,

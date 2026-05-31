@@ -1,79 +1,28 @@
 from app.db import db
-from app.models.internal.user import User
 from app.models.internal.interaction import Interaction
-from app.models.input.interaction import UpdateInteraction
+from app.models.input.interaction import UpdateInteraction, CollectInteraction
 
-def get_existing_new_users(up_users: set[str], current_intr_users: set[str]) -> tuple[set[str], set[str], set[str]]:
-    new_users: set[str] = set()
-    outsiders: set[str] = set()
-    insiders: set[str] = set()
-
-    for user in up_users:
-        if db.user_exist(user):
-            if user not in current_intr_users:
-                outsiders.add(user)
-            else:
-                insiders.add(user)
-        else:
-            new_users.add(user)
-    
-    return new_users, outsiders, insiders
-
-def process_new_users(interaction_id: str, current_intr: Interaction, 
-                           new_users: set[str], ref_parent: User, 
-                           up_users: set[str]) -> None:
-    intr_users: set[User] = {db.get_user(uid) for uid in up_users if uid in db.users}
-    
-    current_intr.user_ids.update(new_users)
-    for user in new_users:
-        db.add_user_interaction(user, interaction_id)
-        db.add_user(user, ref_parent, intr_users)
-    
-    created_users: set[User] = {db.get_user(uid) for uid in new_users}
-    for user in created_users.union(intr_users):
-        db.update_usr_intr_grp(user.uid, created_users)
-    
-    db.update_users_interaction(interaction_id, up_users)
-
-def process_merge_users(interaction_id: str, current_intr: Interaction, up_users: set[str], 
-                        outsiders: set[str], insiders: set[str]) -> None:
-    current_intr.user_ids = up_users
-    existing_users = insiders.union(outsiders)
-    merged_users = {db.get_user(uid) for uid in existing_users}
-    for user in merged_users:
-        user.intr_grp.update(merged_users)
-        if not db.is_in_recompute(user.uid):
-            db.add_recompute(user.traverse())
-        if user in outsiders:
-            db.add_user_interaction(user.uid, interaction_id)
-
+from app.jobs.collection import process_collect
 
 def process_update(interaction: UpdateInteraction) -> None:
-    current_intr: Interaction = db.get_interaction(interaction.id_)
-    up_users: set[str] = interaction.user_ids
+    original_intr: Interaction = db.get_interaction(interaction.id_)
+    original_usrs: set[str] = original_intr.user_ids
+    updated_usrs: set[str] = interaction.user_ids
+    to_visit: set[str] = original_usrs.union(updated_usrs)
+    visited: set[str] = set()
+    recompute: set[str] = set()
 
-    removed_users: set[User] = {db.get_user(uid) for uid in current_intr.user_ids if uid not in up_users}
-    new_users, outsiders, insiders = get_existing_new_users(up_users, current_intr.user_ids)
-    ref_parent = db.get_parent(next(iter(insiders)))
-
-    if new_users:
-        process_new_users(interaction.id_, current_intr, new_users, ref_parent, up_users)
+    while to_visit:
+        uid = to_visit.pop()
+        if db.user_exist(uid) and uid not in visited:
+            visited.update(db.get_user(uid).traverse())
+            
+    for uid in visited:
+        recompute.update(db.get_interaction_from_user(uid))
+        db.delete_user(uid)
     
-    if outsiders:
-        process_merge_users(interaction.id_, current_intr, up_users, outsiders, insiders)
+    db.update_users_interaction(interaction.id_, updated_usrs)
     
-    if removed_users:
-        current_intr.user_ids = up_users
-        existing_users = insiders.union(outsiders)
-        merged_users = {db.get_user(uid) for uid in existing_users}
-        for user in merged_users:
-            user.intr_grp = user.intr_grp.difference(removed_users)
-            if not db.is_in_recompute(user.uid):
-                db.add_recompute(user.traverse())
-        
-        for user in removed_users:
-            user.intr_grp = user.intr_grp - merged_users
-            if not db.is_in_recompute(user.uid):
-                db.add_recompute(user.traverse())
-
-        
+    for iid in recompute:
+        repr_intr: Interaction = db.get_interaction(iid)
+        process_collect(CollectInteraction(id=iid, source=repr_intr.source, event=repr_intr.event, userIds=list(repr_intr.user_ids)))

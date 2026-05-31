@@ -4,14 +4,13 @@ from app.models.internal.metrics import Metric
 from app.models.commons.values import Source, Event
 
 class DB:
-    __slots__ = ["interactions", "users", "user_interaction", "metrics", "recompute"]
+    __slots__ = ["interactions", "users", "user_interaction", "metrics"]
 
     def __init__(self):
         self.interactions: dict[str, Interaction] = {}
         self.users: dict[str, User] = {}
         self.user_interaction: dict[str, set[str]] = {}
         self.metrics: dict[str, Metric] = {}
-        self.recompute: set[str] = set()
 
     def user_exist(self, user_id: str) -> bool:
         return user_id in self.users
@@ -23,6 +22,9 @@ class DB:
         self.users[user_id] = user
         return user
     
+    def add_parent(self, uid: str, parent: User) -> None:
+        db.users[uid].parent = parent
+
     def get_user(self, user_id: str) -> User:
         return self.users[user_id]
 
@@ -90,5 +92,11 @@ class DB:
     
     def restart_recompute(self) -> None:
         self.recompute = set()
+    
+    def delete_user(self, uid: str) -> None:
+        del self.users[uid]
+        del self.user_interaction[uid]
+        if uid in self.metrics:
+            del self.metrics[uid]
 
 db = DB()

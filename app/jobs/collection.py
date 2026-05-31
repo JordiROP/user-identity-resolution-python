@@ -10,6 +10,14 @@ def resolve_user(reference: str) -> tuple[User, User]:
     current = db.get_user(reference)
     return parent, current
 
+def get_or_create_metrics(interaction, parent):
+    if db.has_metrics(parent.uid):
+        metric = db.get_metric(parent.uid)
+        metric.update_metric(interaction.source, interaction.event)
+    else:
+        metric = db.create_metric(parent.uid, interaction.source, interaction.event)
+    return metric
+
 def process_collect(interaction: CollectInteraction) -> None:
     db.add_interaction(interaction.id_, 
                        set(interaction.user_ids),
@@ -22,11 +30,7 @@ def process_collect(interaction: CollectInteraction) -> None:
     present_users = {curr_ref}
     db.add_user_interaction(reference, interaction.id_)
 
-    if db.has_metrics(parent.uid):
-        metric = db.get_metric(parent.uid)
-        metric.update_metric(interaction.source, interaction.event)
-    else:
-        metric = db.create_metric(parent.uid, interaction.source, interaction.event)
+    metric = get_or_create_metrics(interaction, parent)
     
     for i in range(1, len(interaction.user_ids)):
         user_id = interaction.user_ids[i]
@@ -43,3 +47,4 @@ def process_collect(interaction: CollectInteraction) -> None:
     
     for user_id in interaction.user_ids:
         db.users[user_id].intr_grp.update(present_users)
+
