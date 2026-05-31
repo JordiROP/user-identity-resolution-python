@@ -48,3 +48,4 @@ def process_collect(interaction: CollectInteraction) -> None:
     for user_id in interaction.user_ids:
         db.users[user_id].intr_grp.update(present_users)
 
+    db.calculate_metrics()

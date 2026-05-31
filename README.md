@@ -28,6 +28,18 @@ The service maintains highly optimized running metrics across the global user gr
 * **Streaming vs. Batch Paradigm:** The system processes records individualistically as they stream via HTTP, updating the internal graph state atomically rather than relying on batch reconciliation windows.
 * **Zero External Storage Libraries:** Built purely from native collection types to show mastery over custom data structure orchestration and algorithmic efficiency.
 
+# Results About the Solution provided
+```
+received metrics: {UniqueUsers:1022 BouncedUsers:8 CrossDeviceUsers:979 ElapsedTime:1.426041ms}
+expected metrics: {UniqueUsers:1022 BouncedUsers:8 CrossDeviceUsers:979 ElapsedTime:0s}
+iteration performance score=0.99 (write=0.95, read=1.00)
+score is (CorrectnessScore=9, PerformanceScore=8.23, Count=10, Result=0.88)
+total score is 0.88
+```
+Note that the result might vary depending on the execution as every execution is randomized
+
+
+
 ## Execution
 
 To run the application:

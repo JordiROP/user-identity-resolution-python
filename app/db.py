@@ -3,14 +3,22 @@ from app.models.internal.user import User
 from app.models.internal.metrics import Metric
 from app.models.commons.values import Source, Event
 
+from threading import RLock
+
 class DB:
-    __slots__ = ["interactions", "users", "user_interaction", "metrics"]
+    __slots__ = ["interactions", "users", "user_interaction", "metrics", "unique_users", "bounced_users", "x_device_users", "_lock"]
 
     def __init__(self):
         self.interactions: dict[str, Interaction] = {}
         self.users: dict[str, User] = {}
         self.user_interaction: dict[str, set[str]] = {}
         self.metrics: dict[str, Metric] = {}
+
+        self.unique_users:int = 0
+        self.bounced_users:int = 0
+        self.x_device_users:int = 0
+
+        self._lock = RLock()
 
     def user_exist(self, user_id: str) -> bool:
         return user_id in self.users
@@ -77,26 +85,21 @@ class DB:
     def delete_metric(self, uid: str) -> None:
         del self.metrics[uid]
     
-    def add_recompute(self, users: set[str]) -> None:
-        self.recompute.update(users)
-
-    def is_in_recompute(self, user_id: str) -> bool:
-        return user_id in self.recompute 
-
-    def clear_reacomputed_data(self) -> None:
-        for uid in self.recompute:
-            del self.users[uid]
-            del self.user_interaction[uid]
-            if uid in self.metrics:
-                del self.metrics[uid]
-    
-    def restart_recompute(self) -> None:
-        self.recompute = set()
-    
     def delete_user(self, uid: str) -> None:
         del self.users[uid]
         del self.user_interaction[uid]
         if uid in self.metrics:
             del self.metrics[uid]
+    
+    def calculate_metrics(self) -> None:
+        self.unique_users:int = 0
+        self.bounced_users:int = 0
+        self.x_device_users:int = 0
 
+        with self._lock:
+            for _, metric in db.metrics.items():
+                self.unique_users += 1
+                self.bounced_users += 1 if metric.is_bounced() else 0
+                self.x_device_users +=1 if metric.is_crossed() else 0
+    
 db = DB()

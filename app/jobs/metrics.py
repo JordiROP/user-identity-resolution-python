@@ -13,10 +13,8 @@ def get_metrics_counter():
     return unique_users, bounced_users, x_device_users
 
 def process_metrics():
-    unique_users, bounced_users, x_device_users = get_metrics_counter()
-    
     return {
-            "uniqueUsers": unique_users,
-            "bouncedUsers" : bounced_users,
-            "crossDeviceUsers" : x_device_users
+            "uniqueUsers": db.unique_users,
+            "bouncedUsers" : db.bounced_users,
+            "crossDeviceUsers" : db.x_device_users
         }

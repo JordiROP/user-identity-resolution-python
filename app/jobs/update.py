@@ -26,3 +26,5 @@ def process_update(interaction: UpdateInteraction) -> None:
     for iid in recompute:
         repr_intr: Interaction = db.get_interaction(iid)
         process_collect(CollectInteraction(id=iid, source=repr_intr.source, event=repr_intr.event, userIds=list(repr_intr.user_ids)))
+    
+    db.calculate_metrics()
