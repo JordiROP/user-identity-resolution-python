@@ -38,12 +38,13 @@ total score is 0.88
 ```
 Note that the result might vary depending on the execution as every execution is randomized
 
-
-
 ## Execution
 
 To run the application:
 
+* [Install uv](https://docs.astral.sh/uv/getting-started/installation/#installation-methods)
+
     ```
+    uv sync
     uv run fastapi dev --port 8080
     ```
