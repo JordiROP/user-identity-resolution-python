@@ -80,7 +80,6 @@ def test_process_collect() -> None:
     
     for input in inputs:
         process_collect(CollectInteraction(**input))
-        print(db.users)
 
     assert db.interactions == expected_interactions
     assert db.users == expected_users

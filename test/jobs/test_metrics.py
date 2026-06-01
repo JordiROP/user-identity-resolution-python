@@ -14,7 +14,6 @@ def clean_db():
     db.users = {}
     db.user_interaction = {}
     db.metrics = {}
-    db.recompute = set()
 
 def test_process_metrics():
     inputs = [
@@ -52,8 +51,8 @@ def test_process_metrics_after_update():
     
     updates = [
         {"id":"7c51900e-bb98-422c-a830-35ff0e00b8e4","userIds":["u32","u33", "u62"]},
-        {"id":"0067fd88-511e-48bf-a944-cc743bd01f03","userIds":["u51","u52"]}
-    ]
+        {"id":"0067fd88-511e-48bf-a944-cc743bd01f03","userIds":["u51","u52"]},
+        {"id":"7fbcedc3-d47d-4aaa-9616-4b847519690c","userIds":["u7","u6"]}]
 
     for input in inputs:
         process_collect(CollectInteraction(**input))
@@ -62,11 +61,10 @@ def test_process_metrics_after_update():
         process_update(UpdateInteraction(**update))
     
     expected_metrics = {
-                        "uniqueUsers": 6,
-                        "bouncedUsers": 3,
+                        "uniqueUsers": 5,
+                        "bouncedUsers": 2,
                         "crossDeviceUsers": 1
                     }
 
-    print(db.recompute)
     metrics = process_metrics()
     assert metrics == expected_metrics
